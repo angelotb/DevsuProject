@@ -1,0 +1,16 @@
+{
+  "name": "devsu-playwright-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:debug": "npx playwright test --debug",
+    "codegen": "npx playwright codegen"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.30.0",
+    "typescript": "^5.1.0",
+    "ts-node": "^10.9.1"
+  }
+}
