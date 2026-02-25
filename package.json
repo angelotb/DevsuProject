@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "test": "npx playwright test",
+    "test:all": "npx playwright test --project=chromium --project=firefox --project=chromium-headless",
     "test:headed": "npx playwright test --headed",
     "test:debug": "npx playwright test --debug",
     "codegen": "npx playwright codegen"
