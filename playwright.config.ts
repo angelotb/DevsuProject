@@ -10,20 +10,33 @@ export default defineConfig({
     headless: true,
     viewport: { width: 1280, height: 720 },
     actionTimeout: 0,
-    baseURL: 'http://localhost:3000',
-    trace: 'on-first-retry',
+    baseURL: 'https://www.demoblaze.com/',
+    trace: 'on',
+    ignoreHTTPSErrors: true,
+    video: 'retain-on-failure',
+    screenshot: 'only-on-failure',
+
   },
   projects: [
     {
-      name: 'chromium',
+      name: "setup",
+      testMatch: "tests/setup.spec.ts",
       use: { ...devices['Desktop Chrome'] },
+
+    },
+    {
+      name: 'chromium',
+      dependencies: ['setup'],
+      use: { ...devices['Desktop Chrome'], permissions: ["clipboard-read"] },
     },
     {
       name: 'firefox',
+      dependencies: ['setup'],
       use: { ...devices['Desktop Firefox'] },
     },
     {
       name: 'webkit',
+      dependencies: ['setup'],
       use: { ...devices['Desktop Safari'] },
     },
   ],
