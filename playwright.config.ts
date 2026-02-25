@@ -30,9 +30,9 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], permissions: ["clipboard-read"] },
     },
     {
-      name: 'firefox',
+      name: 'EDGE',
       dependencies: ['setup'],
-      use: { ...devices['Desktop Firefox'] },
+      use: { ...devices['Desktop Edge'] },
     },
     {
       name: 'webkit',

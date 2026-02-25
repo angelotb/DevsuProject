@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('vizualizarCarrito', async ({ page }) => {
+  test.setTimeout(30000); 
   await page.goto('https://www.demoblaze.com/');
   await page.getByRole('link', { name: 'Sony vaio i5' }).click();
   page.once('dialog', dialog => {
