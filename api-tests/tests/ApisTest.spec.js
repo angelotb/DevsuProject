@@ -13,6 +13,8 @@ test.describe('API Tests for Demoblaze', () => {
         password: passwordUsuario
       }
     });
+    const body = await response.json();
+    console.log(body);
     expect(response.status()).toBe(200);
   });
 
