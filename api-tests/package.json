@@ -6,6 +6,8 @@
     "test": "npx playwright test",
     "test:headed": "npx playwright test --headed",
     "test:report": "npx playwright show-report",
+    "test:api": "npx playwright test tests/ApisTest.spec.js --workers=1",
+    "test:api:report": "npx playwright test tests/ApisTest.spec.js --workers=1 && npx playwright show-report",
     "install-browsers": "npx playwright install"
   },
   "devDependencies": {

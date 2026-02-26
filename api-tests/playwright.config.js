@@ -9,10 +9,14 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
   workers: process.env.CI ? 1 : undefined,
-  reporters: [["html"], ["list"]],
-  
+  reporters: [
+    ['html', { outputFolder: 'playwright-report', open: 'never' }],
+    ['json', { outputFile: 'test-results/results.json' }],
+    ['junit', { outputFile: 'test-results/junit.xml' }],
+    ['list']
+  ],
   use: {
-  
+
     baseURL: "https://api.demoblaze.com",
     testIdAttribute: "data-test",
     trace: "on",
@@ -21,4 +25,5 @@ export default defineConfig({
     video: "on",
     screenshot: "on",
     headless: true,
-  }});
+  }
+});
