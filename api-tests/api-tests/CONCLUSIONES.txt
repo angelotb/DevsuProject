@@ -1,0 +1,243 @@
+═══════════════════════════════════════════════════════════════════════════════
+              CONCLUSIONES Y HALLAZGOS - API TESTS DEMOBLAZE
+═══════════════════════════════════════════════════════════════════════════════
+
+FECHA: Febrero 2026
+PROYECTO: Pruebas Automatizadas de API - Demoblaze
+HERRAMIENTA: Playwright Test (Node.js)
+
+═══════════════════════════════════════════════════════════════════════════════
+RESUMEN EJECUTIVO:
+═══════════════════════════════════════════════════════════════════════════════
+
+Se realizaron pruebas automatizadas de API contra la plataforma Demoblaze para
+validar los flujos de:
+  • Registro de usuarios
+  • Duplicación de usuarios existentes
+  • Autenticación/Login
+  • Validación de credenciales incorrectas
+
+Los tests fueron exitosos, pero se identificaron problemas significativos en
+la implementación de los códigos de estado HTTP (HTTP Status Codes) que pueden
+afectar la escalabilidad y mantenibilidad de la API.
+
+═══════════════════════════════════════════════════════════════════════════════
+HALLAZGOS PRINCIPALES:
+═══════════════════════════════════════════════════════════════════════════════
+
+HALLAZGO #1: HTTP Status Code Incorrecto (200 para todos los casos)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DESCRIPCIÓN:
+La API devuelve HTTP 200 OK en todos los casos, incluso cuando hay errores.
+
+Ejemplos encontrados:
+  ❌ Registro exitoso → 200 OK ✓ (CORRECTO)
+  ❌ Usuario duplicado → 200 OK ✗ (DEBERÍA SER 409 CONFLICT)
+  ❌ Credenciales incorrectas → 200 OK ✗ (DEBERÍA SER 401 UNAUTHORIZED)
+  ❌ Usuario no encontrado → 200 OK ✗ (DEBERÍA SER 404 NOT FOUND)
+
+IMPACTO:
+  • Clientes no pueden procesar errores basándose en status codes
+  • Los tests deben analizar el cuerpo de la respuesta para encontrar errores
+  • Hace la API más difícil de depurar y menos amigable para desarrolladores
+  • No sigue los estándares REST
+
+EVIDENCIA:
+Al intentar login con credenciales incorrectas, la API responde:
+
+    HTTP 200 OK
+    {
+      "errorMessage": "Wrong password."
+    }
+
+Esto es problemático porque el código 200 indica "éxito", contradiciendo el 
+mensaje de error en el cuerpo.
+
+
+HALLAZGO #2: Inconsistencia en Manejo de Errores
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DESCRIPCIÓN:
+Los errores se comunican solo a través del cuerpo JSON, no del status code.
+
+Esto requiere que el cliente:
+  • Siempre analice la respuesta completa, incluso en "errores"
+  • Busque campos específicos como "errorMessage" o propiedades similares
+  • No pueda usar características estándar de HTTP como redirecciones o 
+    manejo de errores por código
+
+IMPACTO:
+  • Mayor complejidad en el código del cliente
+  • Más lógica de validación manual
+  • Mayor consumo de recursos (leer completa cada respuesta)
+
+
+HALLAZGO #3: Problemas de Secuencialidad en Tests
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DESCRIPCIÓN:
+Inicialmente, los tests 3 y 4 (login) fallaban porque no se ejecutaban 
+secuencialmente después del registro (test 1).
+
+SOLUCIÓN APLICADA:
+  • Mover todos los tests dentro de un solo test.describe()
+  • Usar --workers=1 en la ejecución para garantizar orden secuencial
+  • Evitar test.describe() anidados en diferentes niveles
+
+LECCIÓN:
+En Playwright, la ejecución paralela es la configuración por defecto, lo que
+puede causar problemas cuando hay dependencias entre tests.
+
+
+═══════════════════════════════════════════════════════════════════════════════
+RECOMENDACIONES - MEJORAS PARA LA API:
+═══════════════════════════════════════════════════════════════════════════════
+
+RECOMENDACIÓN #1: Implementar Códigos HTTP Correctos
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRIORIDAD: ⭐⭐⭐⭐⭐ CRÍTICA
+
+La API debería devolver los siguientes códigos:
+
+    OPERACIÓN                           CÓDIGO ACTUAL    CÓDIGO RECOMENDADO
+    ─────────────────────────────────────────────────────────────────────
+    ✓ Usuario registrado exitosamente      200                200 OK
+    ✓ Datos recibidos correctamente        200                201 CREATED
+    ✗ Usuario ya existe                    200                409 CONFLICT
+    ✗ Credenciales incorrectas             200                401 UNAUTHORIZED
+    ✗ Usuario no encontrado                200                404 NOT FOUND
+    ✗ Datos inválidos/incompletos          200                400 BAD REQUEST
+    ✗ Token expirado                       200                401 UNAUTHORIZED
+    ✗ No autorizado                        200                403 FORBIDDEN
+    ✗ Error del servidor                   200                500 SERVER ERROR
+
+
+EJEMPLO DE IMPLEMENTACIÓN CORRECTA:
+
+    // Antes (INCORRECTO):
+    POST /signup → 200 OK
+    {
+      "errorMessage": "This user already exist"
+    }
+
+    // Después (CORRECTO):
+    POST /signup → 409 CONFLICT
+    {
+      "errorMessage": "This user already exist"
+    }
+
+
+BENEFICIOS:
+  ✓ Compatible con estándares REST/HTTP
+  ✓ Los clientes pueden manejar errores automáticamente
+  ✓ Mejor experiencia de desarrollador
+  ✓ Menos código necesario en el cliente
+  ✓ Mejor soporte de herramientas y frameworks
+
+
+RECOMENDACIÓN #2: Estandarizar Formato de Respuestas de Error
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRIORIDAD: ⭐⭐⭐⭐☆ ALTA
+
+Crear un formato consistente para TODAS las respuestas de error:
+
+    {
+      "statusCode": 409,
+      "error": "CONFLICT",
+      "message": "This user already exist",
+      "timestamp": "2026-02-25T10:30:00Z",
+      "path": "/signup"
+    }
+
+Esto facilita:
+  • Parsing automático de errores
+  • Logging y debugging
+  • Mensajes de error consistentes
+  • Documentación clara del API
+
+
+RECOMENDACIÓN #3: Documentación de Códigos de Error
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRIORIDAD: ⭐⭐⭐⭐☆ ALTA
+
+Documentar claramente todos los posibles códigos HTTP y mensajes de error
+en OpenAPI/Swagger, incluyendo:
+  • Qué significa cada código
+  • Cuando ocurre
+  • Cómo debería el cliente manejarlo
+
+
+═══════════════════════════════════════════════════════════════════════════════
+IMPACTO TÉCNICO DEL PROBLEMA ACTUAL:
+═══════════════════════════════════════════════════════════════════════════════
+
+TESTING:
+  • Tests más complejos de escribir
+  • Deben parsear respuestas incluso cuando fallan
+  • Propenso a falsos positivos/negativos
+
+CLIENTES:
+  • Lógica condicional más compleja
+  • Mayor consumo de ancho de banda (leer completas respuestas de error)
+  • Manejo de errores no estándar
+
+MONITOREO:
+  • Difícil detectar fallos usando solo status codes
+  • Necesita parseo de JSON para alertas
+  • Métricas menos precisas
+
+ESCALABILIDAD:
+  • API gateways/proxies no pueden filtrar por status code
+  • CDNs no pueden cachear correctamente
+  • Load balancers no pueden redirigir en base a errores
+
+
+═══════════════════════════════════════════════════════════════════════════════
+CONCLUSIONES FINALES:
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Los tests se ejecutaron exitosamente una vez que se resolvieron los 
+   problemas de secuencialidad en Playwright.
+
+2. La funcionalidad del API (registro, login, validaciones) funciona 
+   correctamente, pero de manera subóptima.
+
+3. El principal problema es la falta de adherencia a estándares HTTP. 
+   La API devuelve HTTP 200 incluso cuando hay errores.
+
+4. Esta arquitectura de error-handling viola los principios REST y hace 
+   la API más difícil de usar y mantener.
+
+5. IMPLEMENTAR CÓDIGOS HTTP CORRETOS es la mejora más importante y debería 
+   ser una prioridad alta.
+
+6. El proyecto demuestra que Playwright es excelente para pruebas de API, 
+   pero la calidad de las pruebas depende de la consistencia de la API 
+   siendo evaluada.
+
+
+═══════════════════════════════════════════════════════════════════════════════
+PRÓXIMOS PASOS RECOMENDADOS:
+═══════════════════════════════════════════════════════════════════════════════
+
+CORTO PLAZO:
+  ☐ Comunicar hallazgos al equipo de desarrollo de Demoblaze
+  ☐ Expandir suite de tests para más casos de error
+  ☐ Documentar comportamiento actual como "quirks" del API
+
+MEDIANO PLAZO:
+  ☐ Implementar HTTP status codes correctos
+  ☐ Estandarizar formato de respuestas de error
+  ☐ Actualizar documentación de API
+
+LARGO PLAZO:
+  ☐ Migrar clientes a nueva versión del API con status codes correctos
+  ☐ Deprecar respuestas antiguas
+  ☐ Implementar versionado de API
+
+
+═══════════════════════════════════════════════════════════════════════════════

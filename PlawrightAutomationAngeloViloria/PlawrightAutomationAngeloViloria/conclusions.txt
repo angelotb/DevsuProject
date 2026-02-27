@@ -1,0 +1,22 @@
+Conclusiones y hallazgos
+
+Resumen del ejercicio:
+- Se desarrollaron tests E2E usando Playwright para: formulario de compra, sumar productos y visualizar carrito.
+
+Hallazgos principales:
+- FormularioCompra: Validaciones del formulario funcionan (campos obligatorios, envío), pero verificar manejo de errores de red.
+- sumarProductos: La suma/actualización del total se comporta correctamente; revisar casos límite (cantidades grandes, productos con descuento).
+- vizualizarCarrito: El carrito muestra los ítems añadidos; validar sincronización entre vistas y persistencia local/servidor.
+
+Problemas potenciales / Riesgos:
+- Selectores frágiles: usar selectores data-test/data-testid para mayor estabilidad.
+- Flakiness: agregar esperas explícitas a eventos de red o usar `waitFor` apropiado.
+- Datos de prueba: asegurar datos deterministas (mocks o fixtures) para CI.
+
+Recomendaciones:
+- Añadir screenshots y videos en fallos (configurar Playwright para capturar evidencia).
+- Integrar ejecución en CI (GitHub Actions / Azure Pipelines) y ejecutar en `--headless` para velocidad.
+- Añadir más aserciones de negocio (precios, impuestos, descuentos) y pruebas de borde.
+
+Conclusión:
+Los tests cubren las funcionalidades clave y funcionan como base sólida; con mejoras en selectores, manejo de datos y CI, la suite será más estable y fiable.

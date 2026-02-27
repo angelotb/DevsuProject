@@ -1,0 +1,34 @@
+{
+  "name": "devsu-playwright-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "npx playwright test",
+    "test:all": "npx playwright test --project=chromium --project=firefox --project=chromium-headless",
+    "test:headed": "npx playwright test --headed",
+    "test:debug": "npx playwright test --debug",
+    "codegen": "npx playwright codegen"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.30.0",
+    "typescript": "^5.1.0",
+    "ts-node": "^10.9.1"
+  },
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/angelotb/DevsuProject.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/angelotb/DevsuProject/issues"
+  },
+  "homepage": "https://github.com/angelotb/DevsuProject#readme"
+}
